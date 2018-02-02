@@ -29,9 +29,7 @@ object unweighted {
 
     def containsEdge(edge: Edge[A]): Boolean = edges.contains(edge)
 
-    def vertices: Set[A] = edgesMap.keySet.toSet
-
-    def neighborsOf(v: A): Set[A] = edgesMap(v).toSet
+    def neighborsOf(v: A): Set[A] = edgesMap.get(v).fold(Set.empty[A])(_.toSet)
 
     def incidentEdgesOf(v: A): Set[Edge[A]] = edges.filter { case (from, _) => v == from }.toSet
 
@@ -53,6 +51,8 @@ object unweighted {
     def remove(edge: Edge[A]): this.type = {
       edges -= edge; this
     }
+
+    def vertices: Set[A] = edgesMap.keySet.toSet ++ edgesMap.values.flatten
   }
 
   object DirectedGraph {
@@ -65,7 +65,7 @@ object unweighted {
     * 辺: from -> to が存在するならば、辺: to -> from も同時に存在する
     */
   class UndirectedGraph[A] extends UnweightedGraph[A] {
-    object EdgeUtil {
+    private object EdgeUtil {
       def reverse(edge: Edge[A]): Edge[A] = edge match {
         case(f, t) => (t, f)
       }
@@ -82,6 +82,9 @@ object unweighted {
       edges -= EdgeUtil.reverse(edge)
       this
     }
+
+
+    def vertices: Set[A] = edgesMap.keySet.toSet
   }
 
   object UndirectedGraph {

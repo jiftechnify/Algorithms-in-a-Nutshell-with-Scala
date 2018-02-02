@@ -7,7 +7,7 @@ object weighted {
     * 重み付きグラフの辺
     */
   case class WeightedEdge[A](from: A, weight: Double, to: A) {
-    override def toString: String = s"$from ---<$weight>--> $to"
+    override def toString: String = s"$from --|$weight|-> $to"
 
     def reversed = WeightedEdge(to, weight, from)
 
@@ -30,18 +30,22 @@ object weighted {
   /**
     * 節点 v1 から節点 v2 への重み w の辺を以下のように書けるようにする
     *
-    * v1 ---< w >--> v2
+    * v1 --|w|-> v2
     */
   object WeightedEdgeSyntax {
-
-    private[graph] case class PartialWEdge[A](from: A, weight: Double) {
-      def >-->(to: A): WeightedEdge[A] = WeightedEdge(from, weight, to)
+    private[WeightedEdgeSyntax] case class PartialWEdge[A](from: A, weight: Double) {
+      def |->(to: A): WeightedEdge[A] = WeightedEdge(from, weight, to)
     }
 
     implicit class WEdgeFrom[A](from: A) {
-      def ---<(weight: Double): PartialWEdge[A] = PartialWEdge(from, weight)
+      def --|(weight: Double): PartialWEdge[A] = PartialWEdge(from, weight)
     }
 
+    implicit class PairOps[A](pair: (A, A)) {
+      def withWeight(weight: Double): WeightedEdge[A] = pair match {
+        case (from, to) => WeightedEdge(from, weight, to)
+      }
+    }
   }
 
   trait WeightedGraph[A] extends Graph[A] {
@@ -63,11 +67,14 @@ object weighted {
 
     def containsEdge(edge: WeightedEdge[A]): Boolean = edges.contains(edge)
 
-    def vertices: Set[A] = edgesMap.keySet.toSet
-
-    def neighborsOf(vertex: A): Set[A] = edgesMap(vertex).map(_.to).toSet
+    def neighborsOf(vertex: A): Set[A] = edgesMap.get(vertex).fold(Set.empty[A])(_.map(_.to).toSet)
 
     def incidentEdgesOf(vertex: A): Set[WeightedEdge[A]] = edgesMap(vertex).toSet
+
+    /**
+      * このグラフから辺の重みだけを取り除き、節点の接続関係を保った重みなしグラフを返す
+      */
+    def unweighted: graph.unweighted.UnweightedGraph[A]
 
     override def toString: String = {
       edgesMap.map { case (from, es) =>
@@ -86,6 +93,13 @@ object weighted {
 
     def remove(edge: WeightedEdge[A]): this.type = {
       edges -= edge; this
+    }
+
+    def vertices: Set[A] = edges.flatMap(e => Set(e.from, e.to)).toSet
+
+    def unweighted: graph.unweighted.DirectedGraph[A] = {
+      val edges = this.edges.map(e => (e.from, e.to)).toSeq
+      graph.unweighted.DirectedGraph(edges: _*)
     }
   }
 
@@ -109,6 +123,13 @@ object weighted {
       edges -= edge
       edges -= edge.reversed
       this
+    }
+
+    val vertices: Set[A] = edgesMap.keySet.toSet
+
+    def unweighted: graph.unweighted.UndirectedGraph[A] = {
+      val edges = this.edges.map(e => (e.from, e.to)).toSeq
+      graph.unweighted.UndirectedGraph(edges: _*)
     }
   }
 

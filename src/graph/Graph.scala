@@ -1,6 +1,7 @@
 package graph
 
 import scala.collection.mutable
+import scala.language.higherKinds
 
 /**
   * A型の要素を頂点とするグラフ
@@ -91,15 +92,15 @@ trait Graph[A] {
 
 
   /**
-    * //    * 節点fromから節点toまでの深さ優先探索による経路
-    * //    * @return 経路があれば、fromからtoまでの経路に含まれる節点からなるSeq。
-    * //    *         経路がなければ、空のSeq
-    * //    */
-  //  def dfsPath(from: A, to: A): Seq[A] = BasicGraphSearch.dfs(this, from, to)
-  //
-  //  /**
-  //    * 節点fromからグラフの各節点までのBFS距離を計算する
-  //    * @return
-  //    */
-  //  def bfsDistanceFrom(from: A): Map[A, Int] = BasicGraphSearch.calcBfsDistance(this, from)
+    * 節点fromから節点toまでの深さ優先探索による経路
+    * @return 経路があれば、fromからtoまでの経路に含まれる節点からなるSeq。
+    *         経路がなければ、空のSeq
+    */
+  def dfsPath(from: A, to: A): Seq[A] = BasicGraphSearch.dfs(this, from, to)
+
+  /**
+    * 節点fromからグラフの各節点までのBFS距離を計算する
+    * @return
+    */
+  def bfsDistanceFrom(from: A): Map[A, Int] = BasicGraphSearch.calcBfsDistance(this, from)
 }
